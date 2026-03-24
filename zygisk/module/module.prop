@@ -1,6 +1,6 @@
 id=zygisk_vector
 name=Vector - Andrei LSPosed 
-version=${versionName}.0
+version=${versionName}
 versionCode=${versionCode}
 author=Andrei
 description=A Modern, XPosed-Compatible Framework for Android Application hooking
