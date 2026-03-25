@@ -1,6 +1,6 @@
 {
-	"version": "v2.0",
+	"version": "v1.0",
 	"versionCode": 3021,
-	"zipUrl": "https://github.com/AndreiMikh/LSPosed/releases/download/v2.0/Vector-v2.0-Release.zip",
+	"zipUrl": "https://github.com/AndreiMikh/LSPosed/releases/download/v1.0/Vector-v1.0-Release.zip",
 	"changelog": "https://raw.githubusercontent.com/AndreiMikh/LSPosed/master/zygisk/changelog.md"
 }
