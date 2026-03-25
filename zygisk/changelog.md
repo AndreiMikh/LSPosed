@@ -1,16 +1,16 @@
-🎉 **Release: Vector 2.0** 🎉
+🎉 **Release: Vector 1.0** 🎉
 
-Welcome to Vector 2.0! As part of our ongoing transition, the project has officially been renamed from `LSPosed` to `Vector`. While our major internal refactoring is still underway, we are releasing 2.0 now to provide a stable, feature-complete environment for those relying on legacy libxposed APIs.
+Welcome to Vector 1.0! As Part of our Ongoing Transition, the Project has Officially been Renamed from `LSPosed` to `Vector`, While our Major Internal Refactoring is Still Underway, we are Releasing 1.0 Now to Provide a Stable, Feature-Complete Environment for those Relying on Legacy Lib XPosed APIs
 
-### 📚 libxposed API 100 & 101
-With the recent publication of libxposed API 101, the ecosystem is moving toward a new standard with significant breaking changes. Because API 100 was never officially published, **Vector 2.0 serves as the definitive implementation of the API 100 era**, built from the exact commit prior to the API 101 jump.
+### 📚 Lib XPosed API 100 & 101
+With the Recent Publication of Lib XPosed API 101, the Ecosystem is Moving Toward a New Standard with Significant Breaking Changes, Because API 100 was Never Officially Published, **Vector 1.0 Serves as the Definitive Implementation of the API 100 era**, Built from the Exact Xommit Prior to the API 101 Jump
 
 ### 🏗️ Architecture & API Updates
-*   **Vector & Zygisk Overhaul:** Officially renamed and modularized the project, featuring a completely rewritten, modern Zygisk architecture.
-*   **API 100 Finalization:** Completed all remaining libxposed API 100 features, including comprehensive support for static initializers, constructor hooking, and centralized logging.
+*   **Vector & Zygisk Overhaul:** Officially Renamed and Modularized the Project, Featuring a Completely Rewritten, Modern Zygisk Architecture
+*   **API 100 Finalization:** Completed All Remaining Lib XPosed API 100 Features, including Comprehensive Support for Static Initializers, Constructor Hooking, and Centralized Logging
 
 
 ### ⚙️ Core Engine & System Enhancements
-*   🔓 **Bypassed Bionic `LD_PRELOAD` Restrictions:** Resolved fatal namespace errors on Android 10 by loading the `dex2oat` hook library via a `memfd_create` tmpfs-backed file descriptor, bypassing the linker's namespace checks.
-*   🛡️ **Reflection Parity Overhaul:** Completely rebuilt the `invokeSpecialMethod` backend to improve performance, enhance robustness, and mirror standard Java reflection behavior.
-*   ⏱️ **Late Injection Standalone Launch:** Added native support for manual late injection (triggered by NeoZygisk), without relying on Magisk's early-init phase—highly useful for AOSP debug builds.
+*   🔓 **Bypassed Bionic `LD PRELOAD` Restrictions:** Resolved Fatal Namespace Errors on Android 10 by Loading the `Dex2oat` Hook Library via a `MEMFD CREATE` TMPFS-Backed File Descriptor, Bypassing the Linker's Namespace Checks
+*   🛡️ **Reflection Parity Overhaul:** Completely Rebuilt the `INVOKESPECIALMETHOD` Backend to Improve Performance, Enhance Robustness, and Mirror Standard Java Reflection Behavior
+*   ⏱️ **Late Injection Standalone Launch:** Added Native Support for Manual Late Injection (Triggered by NeoZygisk), without Relying on Magisk's Early-Init Phase—Highly Useful for AOSP Debug Builds
