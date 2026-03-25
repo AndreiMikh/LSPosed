@@ -2,74 +2,74 @@
 
 ## Overview
 
-This sub-project constitutes the injection engine of the Vector framework. It acts as the bridge between the Android Zygote process and the high-level Xposed API.
+This Sub-Project Constitutes the Injection Engine of the Vector Framework, It Acts as the Bridge Between the Android Zygote Process and the High-Level XPosed API
 
-The project is a hybrid system consisting of two distinct layers:
-1.  **Native Layer (C++)**: A Zygisk module that hooks process creation, filters targets, and bootstraps the environment.
-2.  **Loader Layer (Kotlin)**: The initial Java-world payload that initializes the Xposed bridge, establishes high-level IPC, and manages the "Parasitic" execution environment for the Manager.
+The Project is a Hybrid System Consisting of Two Distinct Layers:
+1.  **Native Layer (C++)**: A Zygisk Module that Hooks Process Creation, Filters Targets, and Bootstraps the Environment
+2.  **Loader Layer (Kotlin)**: The Initial Java-World Payload that Initializes the XPosed Bridge, Establishes High-Level IPC, and Manages the "Parasitic" Execution Environment for the Manager
 
-Its primary responsibility is to inject the Vector framework into the target process's memory at the earliest possible stage of its lifecycle, ensuring a robust and stealthy environment.
+Its Primary Responsibility is to Inject the Vector LSPosed Framework into the Target Process's Memory at the earliest possible stage of its lifecycle, Ensuring a Robust and Stealthy Environment
 
 ---
 
 ## Part 1: The Native Zygisk Layer
 
-The native layer (`libzygisk.so`) is the entry point. It hooks into the Zygote process creation lifecycle via the Zygisk API (e.g., `preAppSpecialize`, `postAppSpecialize`). It is architected to have minimal internal logic, delegating heavy lifting (like ART hooking and ELF parsing) to the core [native](../native) library.
+The Native Layer (`LIBZYGISK.SO`) is the entry point. It hooks into the Zygote process creation lifecycle via the Zygisk API (e.g., `preAppSpecialize`, `postAppSpecialize`). It is architected to have minimal internal logic, delegating heavy lifting (like ART hooking and ELF parsing) to the core [native](../native) library.
 
 ### Core Responsibilities
-*   **Target Filtering**: Implements logic to skip isolated processes, application zygotes, and non-target system components to minimize footprint.
-*   **IPC Communication**: Establishes a secure Binder IPC connection with the daemon manager service via a "Rendezvous" system service to fetch the framework DEX and configuration data (e.g., obfuscation maps).
-*   **DEX Loading**: Uses `InMemoryDexClassLoader` to load the framework's bytecode directly from memory, avoiding disk I/O signatures.
-*   **JNI Interception**: Installs a low-level JNI hook on `CallBooleanMethodV`. This intercepts `Binder.execTransact` calls, allowing the framework to patch into the system's IPC flow without registering standard Android Services.
+*   **Target Filtering**: Implements Logic to Skip Isolated Processes, Application Zygotes, and Non-Target System Components to Minimize Footprint
+*   **IPC Communication**: Establishes a Secure Binder IPC Connection with the Daemon Manager Service via a "RENDEZVOUS" System Service to Fetch the Framework DEX and Configuration Data (e.g., Obfuscation Maps)
+*   **DEX Loading**: Uses `InMemoryDexClassLoader` to Load the Framework's Byte Code Directly from Memory, Avoiding Disk I/O Signatures
+*   **JNI Interception**: Installs a Low-Level JNI Hook on `CallBooleanMethodV`, This Intercepts `Binder.ExecTransact` Calls, Allowing the Framework to Patch Into the System's IPC Flow Without Registering Standard Android Services
 
 ### Key Components (C++)
-*   **`VectorModule` (`module.cpp`)**: The central orchestrator implementing `zygisk::ModuleBase`. It manages the injection state machine and inherits from `vector::native::Context` to gain core injection capabilities.
-*   **`IPCBridge` (`ipc_bridge.cpp`)**: A singleton handling raw Binder transactions. It manages the two-step connection protocol (Rendezvous -> Dedicated Binder) and contains the JNI table override logic.
+*   **`VectorModule` (`module.cpp`)**: The Central Orchestrator Implementing `Zygisk::ModuleBase`, It Manages the Injection State Machine and Inherits From `Vector::Native::Context` to Gain Core Injection Capabilities
+*   **`IPCBridge` (`IPC BRIDGE CPP`)**: A Singleton Handling Raw Binder Transactions, It Manages the Two-Step Connection Protocol (Rendezvous -> Dedicated Binder) and Contains the JNI Table Override Logic
 
 ---
 
 ## Part 2: The Kotlin Framework Loader
 
-Once the native layer successfully loads the DEX, control is handed off to the Kotlin layer via JNI. This layer handles high-level Android framework manipulation, Xposed initialization, and identity spoofing.
+Once the Native Layer Successfully Loads the DEX, Control is Handed Off to the Kotlin Layer via JNI, This Layer Handles High-Level Android Framework Manipulation, Xposed Initialization, and Identity Spoofing
 
 ### Core Responsibilities
-*   **Bootstrapping**: `Main.forkCommon` acts as the Java entry point. It differentiates between the `system_server` and standard applications.
-*   **Parasitic Injection**: Implements the logic to run the full LSPosed Manager application inside a host process (currently `com.android.shell`). This allows the Manager to run with elevated privileges without being installed as a system app.
-*   **Manual Bridge Service**: Provides the Java-side handling for the intercepted Binder transactions.
+*   **Bootstrapping**: `Main.ForkCommon` Acts as the Java Entry Point, It differentiates Between the `System Server` and Standard Applications
+*   **Parasitic Injection**: Implements the Logic to Run the Full LSPosed Manager Application Inside a Host Poocess (Currently `Com.Android.Shell`). This allows the Manager to Run with Elevated Privileges Without Being Installed as a System App
+*   **Manual Bridge Service**: Provides the Java-Side Handling for the Intercepted Binder Transactions
 
 ### Key Components (Kotlin)
-*   **`Main`**: The singleton entry point. It initializes the Xposed bridge (`Startup`) and decides whether to load the standard Xposed environment or the Parasitic Manager.
-*   **`BridgeService`**: The peer to the C++ `IPCBridge`. It decodes custom `_LSP` transactions, manages the distribution of the system service binder, and handles communication between the injected framework and the root daemon.
-*   **`ParasiticManagerHooker`**: The complex logic for identity transplantation.
-    *   **App Swap**: Swaps the host's `ApplicationInfo` with the Manager's info during `handleBindApplication`.
-    *   **State Persistence**: Since the Android System is unaware the host process is running Manager activities, this component manually captures and restores `Bundle` states to prevent data loss during lifecycle events.
-    *   **Resource Spoofing**: Hooks `WebView` and `ContentProvider` installation to satisfy package name validations.
+*   **`Main`**: The Singleton Entry Point, It Initializes the XPosed Bridge (`Startup`) and Decides Whether to Load the Standard XPosed Environment or the Parasitic Manager
+*   **`BridgeService`**: The Peer to the C++ `IPCBridge`, It Decodes Custom `LSP` Transactions, Manages the Distribution of the system service Binder, and Handles Communication Between the Injected Framework and the Root Daemon
+*   **`ParasiticManagerHooker`**: The Complex Logic for Identity Transplantation
+    *   **App Swap**: Swaps the Host's `ApplicationInfo` with the Manager's Info During `HandleBindApplication`
+    *   **State Persistence**: Since the Android System is Unaware the Host Process is Running Manager Activities, This Component Manually Captures and Restores `Bundle` States to Prevent Data Loss During Life Cycle Events
+    *   **Resource Spoofing**: Hooks `WebView` and `ContentProvider` Installation to Satisfy Package Name Validations
 
 ---
 
 ## Injection & Execution Flow
 
-The full lifecycle of a Vector-instrumented process follows this sequence:
+The Full Life Cycle of a Vector LSPosed-Instrumented process Follows this Sequence:
 
-1.  **Zygote Fork**: Zygisk triggers the `preAppSpecialize` callback in C++.
-2.  **Native Decision**: `VectorModule` checks the UID/Process Name. If valid, it initializes the `IPCBridge`.
-3.  **DEX Fetch**: The C++ layer connects to the root daemon, fetches the Framework DEX file descriptor and the Obfuscation Map.
-4.  **Memory Loading**: `postAppSpecialize` triggers the creation of an `InMemoryDexClassLoader`.
-5.  **JNI Hand-off**: The native module calls the static Kotlin method `org.lsposed.lspd.core.Main.forkCommon`.
+1.  **Zygote Fork**: Zygisk Triggers the `PreAppSpecialize` Callback in C++
+2.  **Native Decision**: `VectorModule` Checks the UID/Process Name, If Valid, it Initializes the `IPCBridge`
+3.  **DEX Fetch**: The C++ Layer Connects to the Root Daemon, Fetches the Framework DEX File Descriptor and the Obfuscation Map
+4.  **Memory Loading**: `PostAppSpecialize` Triggers the Creation of an `InMemoryDexClassLoader`
+5.  **JNI Hand-off**: The Native Module Calls the Static Kotlin Method `Org.LSPosed.LSPD.Core.Main.ForkCommon`.
 6.  **Identity Check (Kotlin)**:
-    *   **If Manager Package**: `ParasiticManagerHooker.start()` is called. The process is "hijacked" to run the Manager UI.
-    *   **If Standard App**: `Startup.bootstrapXposed()` is called. Third-party modules are loaded.
-7.  **Live Interception**: Throughout the process life, the C++ JNI hook redirects specific `Binder.execTransact` calls to `BridgeService.execTransact` in Kotlin.
+    *   **If Manager Package**: `ParasiticManagerHooker.Start()` is Called, The Process is "Hi-Jacked" to run the Manager UI
+    *   **If Standard App**: `Startup.BootStrapXposed()` is Called, Third-Party Modules are Loaded
+7.  **Live Interception**: Throughout the Process Life, the C++ JNI hook Redirects Specific `Binder.ExecTransact` Calls to `BridgeService.ExecTransact` in Kotlin
 
 ---
 
 ## Maintenance & Technical Notes
 
 ### The IPC Protocol
-The communication between the native loader and the Kotlin framework relies on specific conventions:
-*   **Transaction Code**: The custom code `_VEC` (bitwise constructed) must remain synchronized between `ipc_bridge.cpp` (Native) and `BridgeService.kt` (Kotlin).
-*   **The "Out-Parameter" List**: In `ParasiticManagerHooker.start()`, you will see an empty list `mutableListOf<IBinder>()`.
-It is used as an "out-parameter" for the Binder call, allowing the root daemon to push the Manager Service Binder back to the loader.
+The communication Between the Native Loader and the Kotlin Framework Relies on Specific Conventions:
+*   **Transaction Code**: The Custom Code `VEC` (Bitwise Constructed) Must Remain Synchronized Between `IPC BRIDGE CPP` (Native) and `BridgeService.kt` (Kotlin)
+*   **The "Out-Parameter" List**: In `ParasiticManagerHooker.start()`, you will See an Empty List `MutableListOf<IBinder>()`,
+It is Used as an "Out-Parameter" for the Binder Call, Allowing the Root Daemon to Push the Manager Service Binder Back to the Loader
 
 ### System Server Hooks
-The `ParasiticManagerSystemHooker` runs *only* in the `system_server`. It uses `XposedHooker` to intercept `ActivityTaskSupervisor.resolveActivity`. It detects Intents tagged with `LAUNCH_MANAGER` and forcefully redirects them to the parasitic process (e.g., `Shell`), modifying the `ActivityInfo` on the fly to ensure the Manager launches correctly.
+The `ParasiticManagerSystemHooker` Runs *only* in the `SYSTEM SERVER`, It Uses `XPosedHooker` to intercept `ActivityTaskSupervisor.resolveActivity`. It Detects Intents Tagged with `LAUNCH MANAGER` and Forcefully Redirects them to the Parasitic Process (e.g., `Shell`), Modifying the `ActivityInfo` on the Fly to Ensure the Manager Launches Correctly
